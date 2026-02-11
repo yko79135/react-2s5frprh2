@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Test {
+  id                       String    @id @default(cuid())
+  code                     String    @unique
+  title                    String
+  timeLimitMinutes         Int
+  attemptsAllowed          Int       @default(1)
+  showAnswersAfterSubmit   Boolean   @default(false)
+  showFeedbackAfterSubmit  Boolean   @default(true)
+  questionsJson            String
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  attempts                 Attempt[]
+}
+
+model Attempt {
+  id             String    @id @default(cuid())
+  testId         String
+  nickname       String
+  status         String    @default("in_progress")
+  startedAt      DateTime  @default(now())
+  submittedAt    DateTime?
+  totalScore     Float?
+  maxScore       Float?
+  gradingError   String?
+  Test           Test      @relation(fields: [testId], references: [id])
+  answers        Answer[]
+
+  @@index([testId])
+}
+
+model Answer {
+  id                String   @id @default(cuid())
+  attemptId         String
+  questionId        String
+  answerText        String
+  score             Float?
+  maxScore          Float?
+  correct           Boolean?
+  feedbackJson      String?
+  gradedAt          DateTime?
+  attempt           Attempt  @relation(fields: [attemptId], references: [id])
+
+  @@unique([attemptId, questionId])
+}
