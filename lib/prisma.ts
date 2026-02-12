@@ -4,16 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-const resolveDatabaseUrl = () => {
-  const configuredUrl = process.env.DATABASE_URL?.trim();
-  if (configuredUrl) return configuredUrl;
-
-  const dbDirectory = path.join(process.cwd(), 'prisma');
-  fs.mkdirSync(dbDirectory, { recursive: true });
-  return `file:${path.join(dbDirectory, 'dev.db')}`;
-};
-
-const databaseUrl = resolveDatabaseUrl();
+const databaseUrl = process.env.DATABASE_URL?.trim() || 'file:./dev.db';
 
 export const prisma =
   globalForPrisma.prisma ??
