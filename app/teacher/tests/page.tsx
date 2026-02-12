@@ -3,10 +3,17 @@ import { prisma } from '@/lib/prisma';
 import CreateTestForm from './create-test-form';
 import { isTeacherAuthenticated } from '@/lib/auth';
 import { redirect } from 'next/navigation';
+import { isPrismaUnavailableError } from '@/lib/prisma-safe';
 
 export default async function TeacherTestsPage() {
   if (!isTeacherAuthenticated()) redirect('/teacher/login');
-  const tests = await prisma.test.findMany({ orderBy: { createdAt: 'desc' } });
+
+  let tests = [] as Awaited<ReturnType<typeof prisma.test.findMany>>;
+  try {
+    tests = await prisma.test.findMany({ orderBy: { createdAt: 'desc' } });
+  } catch (error) {
+    if (!isPrismaUnavailableError(error)) throw error;
+  }
 
   return (
     <div className="space-y-6">
@@ -19,6 +26,7 @@ export default async function TeacherTestsPage() {
             <div className="text-sm text-slate-600">Code: {test.code}</div>
           </Link>
         ))}
+        {!tests.length && <p className="text-sm text-slate-600">No tests found yet.</p>}
       </section>
     </div>
   );

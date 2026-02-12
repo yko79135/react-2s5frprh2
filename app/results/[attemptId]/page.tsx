@@ -1,9 +1,17 @@
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import { parseQuestions } from '@/lib/test-service';
+import { isPrismaUnavailableError } from '@/lib/prisma-safe';
 
 export default async function ResultsPage({ params }: { params: { attemptId: string } }) {
-  const attempt = await prisma.attempt.findUnique({ where: { id: params.attemptId }, include: { Test: true, answers: true } });
+  let attempt;
+  try {
+    attempt = await prisma.attempt.findUnique({ where: { id: params.attemptId }, include: { Test: true, answers: true } });
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) notFound();
+    throw error;
+  }
+
   if (!attempt) notFound();
   const questions = parseQuestions(attempt.Test.questionsJson);
 

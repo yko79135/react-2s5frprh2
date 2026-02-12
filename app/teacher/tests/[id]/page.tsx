@@ -2,10 +2,19 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { isTeacherAuthenticated } from '@/lib/auth';
 import { redirect, notFound } from 'next/navigation';
+import { isPrismaUnavailableError } from '@/lib/prisma-safe';
 
 export default async function TeacherTestDetailPage({ params }: { params: { id: string } }) {
   if (!isTeacherAuthenticated()) redirect('/teacher/login');
-  const test = await prisma.test.findUnique({ where: { id: params.id }, include: { attempts: { orderBy: { startedAt: 'desc' } } } });
+
+  let test;
+  try {
+    test = await prisma.test.findUnique({ where: { id: params.id }, include: { attempts: { orderBy: { startedAt: 'desc' } } } });
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) notFound();
+    throw error;
+  }
+
   if (!test) notFound();
 
   return (

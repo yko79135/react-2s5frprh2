@@ -2,10 +2,19 @@ import { prisma } from '@/lib/prisma';
 import { isTeacherAuthenticated } from '@/lib/auth';
 import { notFound, redirect } from 'next/navigation';
 import { parseQuestions } from '@/lib/test-service';
+import { isPrismaUnavailableError } from '@/lib/prisma-safe';
 
 export default async function AttemptDetailPage({ params }: { params: { attemptId: string } }) {
   if (!isTeacherAuthenticated()) redirect('/teacher/login');
-  const attempt = await prisma.attempt.findUnique({ where: { id: params.attemptId }, include: { Test: true, answers: true } });
+
+  let attempt;
+  try {
+    attempt = await prisma.attempt.findUnique({ where: { id: params.attemptId }, include: { Test: true, answers: true } });
+  } catch (error) {
+    if (isPrismaUnavailableError(error)) notFound();
+    throw error;
+  }
+
   if (!attempt) notFound();
   const questions = parseQuestions(attempt.Test.questionsJson);
 
