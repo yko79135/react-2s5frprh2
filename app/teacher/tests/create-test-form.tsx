@@ -32,7 +32,7 @@ export default function CreateTestForm() {
 
   return (
     <section className="rounded bg-white p-4 shadow space-y-3">
-      <h2 className="text-lg font-semibold">Create Test (paste structured JSON)</h2>
+      <h2 className="text-lg font-semibold">Create Test (paste JSON or plain-English test content)</h2>
       <textarea className="h-52" value={json} onChange={(e) => setJson(e.target.value)} />
       <div className="grid grid-cols-1 gap-2 md:grid-cols-3">
         <label>Attempts allowed<input type="number" min={1} value={attemptsAllowed} onChange={(e) => setAttemptsAllowed(Number(e.target.value))} /></label>
